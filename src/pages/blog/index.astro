@@ -1,0 +1,159 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionBadge from '../../components/SectionBadge.astro';
+import { getPublishedArticles, CMS_API_URL } from '../../lib/api';
+
+const articles = await getPublishedArticles();
+
+function formatDate(dateStr: string) {
+  try {
+    return new Date(dateStr).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+---
+
+<Base
+  title="Blog & Berita - GlideXAVPN"
+  description="Tips gaming, update performa ping, dan wawasan privasi internet terkini dari tim GlideXAVPN."
+>
+  <!-- Hero Section -->
+  <section class="relative w-full overflow-clip bg-page px-0 border-b border-line">
+    <div class="glow-top relative mx-auto flex w-full flex-col items-center gap-4 border-x border-line px-4 pt-20 pb-12 sm:px-8 lg:px-16 lg:pt-[100px]">
+      <div class="pointer-events-none absolute top-[-2px] left-0 h-[486px] w-full overflow-hidden mix-blend-hard-light">
+        <img alt="" class="absolute top-0 left-0 h-[110.08%] w-[103.55%] max-w-none" src="/images/bg-texture.png" />
+      </div>
+      <SectionBadge text="GLIDEXA BLOG" />
+      <h1 class="relative w-full max-w-[1110px] text-center font-mono text-[32px] leading-[44px] font-medium text-text sm:text-5xl sm:leading-[64px] lg:text-[56px] lg:leading-[76px]">
+        LATEST INSIGHTS & UPDATES
+      </h1>
+      <p class="relative max-w-[680px] text-center font-geist text-base text-muted sm:text-lg">
+        Informasi optimasi ping game online, keamanan siber, dan pengumuman fitur terbaru GlideXAVPN.
+      </p>
+    </div>
+  </section>
+
+  <!-- Articles List Section -->
+  <section class="relative flex w-full flex-col items-start overflow-clip bg-page px-0">
+    <div class="mx-auto flex w-full flex-col border-x border-line bg-page px-6 py-12 lg:p-16">
+      <div class="mx-auto w-full max-w-[1110px] min-[1441px]:max-w-[1400px]">
+        
+        <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-api={CMS_API_URL}>
+          {articles.length === 0 ? (
+            <div id="no-articles-msg" class="col-span-full py-16 text-center text-muted font-geist">
+              <p class="text-lg">Belum ada artikel yang dipublikasikan.</p>
+              <p class="text-sm mt-2">Buat artikel pertama melalui dashboard CMS admin.</p>
+            </div>
+          ) : (
+            articles.map((art) => (
+              <article class="flex flex-col justify-between overflow-hidden rounded-xl border border-line bg-surface transition-all hover:border-ping hover:shadow-lg">
+                {art.thumbnail_url && (
+                  <a href={`/blog/${art.slug}`} class="block aspect-video w-full overflow-hidden border-b border-line">
+                    <img
+                      src={art.thumbnail_url}
+                      alt={art.title}
+                      class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                    />
+                  </a>
+                )}
+                <div class="flex flex-1 flex-col justify-between p-6">
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between text-xs text-muted-2 font-mono">
+                      <span class="rounded bg-surface-2 px-2 py-1 text-soft">
+                        {art.category || 'General'}
+                      </span>
+                      <time datetime={art.published_at}>{formatDate(art.published_at)}</time>
+                    </div>
+                    <h2 class="font-mono text-xl font-medium text-strong line-clamp-2 hover:text-ping">
+                      <a href={`/blog/${art.slug}`}>{art.title}</a>
+                    </h2>
+                    <p class="font-geist text-sm text-muted line-clamp-3 leading-relaxed">
+                      {art.excerpt || 'Baca artikel lengkap untuk ulasan selengkapnya...'}
+                    </p>
+                  </div>
+                  <div class="mt-6 pt-4 border-t border-line/50">
+                    <a
+                      href={`/blog/${art.slug}`}
+                      class="inline-flex items-center gap-2 font-mono text-xs font-medium text-azure-64 hover:text-white"
+                    >
+                      BACA SELENGKAPNYA &rarr;
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Client-side Hydration Script so new CMS articles show immediately -->
+  <script>
+    async function loadLatestArticles() {
+      const grid = document.getElementById('articles-grid');
+      if (!grid) return;
+      const apiUrl = grid.getAttribute('data-api') || 'http://127.0.0.1:8787';
+
+      try {
+        const res = await fetch(`${apiUrl}/api/articles`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.success || !Array.isArray(json.data) || json.data.length === 0) return;
+
+        const html = json.data.map((art: any) => {
+          const dateStr = new Date(art.published_at).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+          const cat = art.category || 'General';
+          const excerpt = art.excerpt || 'Baca artikel lengkap untuk ulasan selengkapnya...';
+
+          const thumbHtml = art.thumbnail_url
+            ? `<a href="/blog/${art.slug}" class="block aspect-video w-full overflow-hidden border-b border-line">
+                 <img src="${art.thumbnail_url}" alt="${art.title}" class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" loading="lazy" />
+               </a>`
+            : '';
+
+          return `
+            <article class="flex flex-col justify-between overflow-hidden rounded-xl border border-line bg-surface transition-all hover:border-ping hover:shadow-lg">
+              ${thumbHtml}
+              <div class="flex flex-1 flex-col justify-between p-6">
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center justify-between text-xs text-muted-2 font-mono">
+                    <span class="rounded bg-surface-2 px-2 py-1 text-soft">${cat}</span>
+                    <time>${dateStr}</time>
+                  </div>
+                  <h2 class="font-mono text-xl font-medium text-strong line-clamp-2 hover:text-ping">
+                    <a href="/blog/${art.slug}">${art.title}</a>
+                  </h2>
+                  <p class="font-geist text-sm text-muted line-clamp-3 leading-relaxed">${excerpt}</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-line/50">
+                  <a href="/blog/${art.slug}" class="inline-flex items-center gap-2 font-mono text-xs font-medium text-azure-64 hover:text-white">
+                    BACA SELENGKAPNYA &rarr;
+                  </a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        grid.innerHTML = html;
+      } catch (e) {
+        // Fallback to static rendered articles if fetch fails
+      }
+    }
+
+    loadLatestArticles();
+  </script>
+</Base>
+

@@ -15,6 +15,7 @@ export const NAV = [
   { label: 'APP', href: '/#app' },
   { label: 'WHY US', href: '/#why-us' },
   { label: 'PRICING', href: '/#pricing' },
+  { label: 'BLOG', href: '/blog' },
   { label: 'FAQ', href: '/#faq' },
 ];
 
