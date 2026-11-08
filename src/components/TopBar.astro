@@ -6,9 +6,10 @@ const campaign = await getActiveCampaign();
 const initialText = campaign?.banner_text || TOP_BAR;
 ---
 
-<div
+<a
+  href="/#pricing"
   id="promo-topbar"
-  class="flex w-full items-center justify-center bg-[linear-gradient(90deg,var(--color-blue-8)_0%,var(--color-azure-28)_50%,var(--color-blue-8)_100%)] px-4 py-4 lg:px-2.5 lg:py-6"
+  class="flex w-full items-center justify-center bg-[linear-gradient(90deg,var(--color-blue-8)_0%,var(--color-azure-28)_50%,var(--color-blue-8)_100%)] px-4 py-4 lg:px-2.5 lg:py-6 transition-opacity hover:opacity-95 cursor-pointer no-underline"
   data-api={CMS_API_URL}
 >
   <p
@@ -17,7 +18,7 @@ const initialText = campaign?.banner_text || TOP_BAR;
   >
     {initialText}
   </p>
-</div>
+</a>
 
 <script>
   async function hydrateCampaignBanner() {
