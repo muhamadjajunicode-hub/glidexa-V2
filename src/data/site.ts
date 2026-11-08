@@ -19,7 +19,7 @@ export const NAV = [
   { label: 'FAQ', href: '/#faq' },
 ];
 
-export const TOP_BAR = '7-DAY FREE TRIAL — PLANS FROM RP 49K/MONTH FOR YOUR FIRST 3 MONTHS';
+export const TOP_BAR = '🚀 GRAND LAUNCH: Coba Gratis 7 Hari + Paket Tahunan Hemat 40% (Cuma Rp 1.150/Hari) Khusus 500 User Pertama!';
 
 export const HERO = {
   title: 'PLAY SECURE. STAY STABLE. GAME WITHOUT WORRY.',
@@ -108,27 +108,27 @@ export const PRICING = {
   plans: [
     {
       name: 'Monthly',
-      price: 'Rp 49k',
+      price: 'Rp 59k',
       unit: '/month',
-      note: 'First 3 months, then Rp 69k/month',
-      tag: 'INTRO PRICE',
+      note: 'Billed monthly, cancel anytime',
+      tag: 'POPULAR',
       devices: '3 Devices',
       featured: false,
     },
     {
       name: '6 Months',
-      price: 'Rp 50k',
+      price: 'Rp 45k',
       unit: '/month',
-      note: 'Rp 299k billed every 6 months',
-      tag: 'SAVE 28%',
+      note: 'Rp 270k billed every 6 months',
+      tag: 'SAVE 24%',
       devices: '3 Devices',
       featured: false,
     },
     {
       name: 'Yearly',
-      price: 'Rp 42k',
+      price: 'Rp 35k',
       unit: '/month',
-      note: 'Rp 499k billed once a year',
+      note: 'Rp 420k billed once a year',
       tag: 'SAVE 40%',
       devices: '4 Devices (+1 Bonus)',
       featured: true,
