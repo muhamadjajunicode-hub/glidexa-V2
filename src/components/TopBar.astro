@@ -1,7 +1,44 @@
 ---
 import { TOP_BAR } from '../data/site';
+import { getActiveCampaign, CMS_API_URL } from '../lib/api';
+
+const campaign = await getActiveCampaign();
+const initialText = campaign?.banner_text || TOP_BAR;
 ---
 
-<div class="flex w-full items-center justify-center bg-[linear-gradient(90deg,var(--color-blue-8)_0%,var(--color-azure-28)_50%,var(--color-blue-8)_100%)] px-4 py-4 lg:px-2.5 lg:py-6">
-  <p class="text-center font-mono text-[11px] leading-4 font-medium text-text sm:text-sm lg:text-base lg:leading-5">{TOP_BAR}</p>
+<div
+  id="promo-topbar"
+  class="flex w-full items-center justify-center bg-[linear-gradient(90deg,var(--color-blue-8)_0%,var(--color-azure-28)_50%,var(--color-blue-8)_100%)] px-4 py-4 lg:px-2.5 lg:py-6"
+  data-api={CMS_API_URL}
+>
+  <p
+    id="promo-banner-text"
+    class="text-center font-mono text-[11px] leading-4 font-medium text-text sm:text-sm lg:text-base lg:leading-5"
+  >
+    {initialText}
+  </p>
 </div>
+
+<script>
+  async function hydrateCampaignBanner() {
+    const bar = document.getElementById('promo-topbar');
+    const textEl = document.getElementById('promo-banner-text');
+    if (!bar || !textEl) return;
+
+    const apiUrl = bar.getAttribute('data-api') || 'https://glidexa-cms-api.muhamadjajuni-code.workers.dev';
+
+    try {
+      const res = await fetch(`${apiUrl}/api/campaigns/active`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.banner_text) {
+          textEl.textContent = json.data.banner_text;
+        }
+      }
+    } catch {
+      // Keep static text if fetch fails
+    }
+  }
+
+  hydrateCampaignBanner();
+</script>

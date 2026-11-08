@@ -2,9 +2,33 @@
 import { LINKS, PRICING } from '../data/site';
 import SectionBadge from './SectionBadge.astro';
 import SectionHeading from './SectionHeading.astro';
+import { getActiveCampaign, CMS_API_URL } from '../lib/api';
+
+const campaign = await getActiveCampaign();
+
+function getDisplayPrice(planName: string, defaultPrice: string) {
+  if (!campaign) return defaultPrice;
+  if (planName === 'Monthly') return campaign.monthly_price || defaultPrice;
+  if (planName === '6 Months') return campaign.six_month_price || defaultPrice;
+  if (planName === 'Yearly') return campaign.yearly_price || defaultPrice;
+  return defaultPrice;
+}
+
+function getDisplayTag(plan: any) {
+  if (campaign && plan.name === 'Yearly' && campaign.tag_discount) {
+    return campaign.tag_discount;
+  }
+  return plan.tag;
+}
+
+function getPlanKey(name: string) {
+  if (name.includes('Month') && !name.includes('6')) return 'monthly';
+  if (name.includes('6')) return 'six_month';
+  return 'yearly';
+}
 ---
 
-<section id="pricing" class="relative flex w-full flex-col items-start overflow-clip bg-page px-0">
+<section id="pricing" class="relative flex w-full flex-col items-start overflow-clip bg-page px-0" data-api={CMS_API_URL}>
   <div class="relative mx-auto flex w-full max-w-none flex-col items-center gap-10 border-x border-line px-4 py-16 sm:px-8 lg:px-16 lg:py-20">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0">
       <div class="absolute inset-0 bg-page"></div>
@@ -27,69 +51,80 @@ import SectionHeading from './SectionHeading.astro';
         data-carousel
       >
         {
-          PRICING.plans.map((plan) => (
-            <article
-              class:list={[
-                'relative flex w-[85%] max-w-[340px] shrink-0 snap-center flex-col rounded-2xl p-[1px] lg:w-auto lg:max-w-none lg:flex-1 lg:shrink',
-                plan.featured
-                  ? 'bg-linear-to-b from-azure-64 via-azure-51/60 to-azure-28/40 shadow-[0_24px_70px_-20px_rgba(38,129,222,0.6)] lg:-translate-y-3'
-                  : 'bg-line/70',
-              ]}
-            >
-              {plan.featured && (
-                <span class="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-azure-64 bg-linear-to-r from-azure-51 to-azure-64 px-4 py-1 font-mono text-[11px] font-bold tracking-[0.14em] whitespace-nowrap text-white shadow-[0_6px_20px_-4px_rgba(79,163,247,0.8)]">
-                  {plan.ribbon}
-                </span>
-              )}
-              <div class:list={['flex h-full flex-col rounded-[15px] p-6 lg:p-8', plan.featured ? 'bg-[#0d1524]' : 'bg-surface']}>
-                <div class="flex items-center justify-between gap-3">
-                  <h3 class="font-geist text-lg leading-7 font-semibold text-strong lg:text-xl">{plan.name}</h3>
-                  <span
-                    class:list={[
-                      'rounded-full px-3 py-1 font-mono text-[11px] leading-4 font-bold tracking-wider whitespace-nowrap',
-                      plan.featured ? 'bg-azure-64/15 text-azure-64' : 'bg-white/[0.06] text-text/80',
-                    ]}
-                  >
-                    {plan.tag}
+          PRICING.plans.map((plan) => {
+            const key = getPlanKey(plan.name);
+            const currentPrice = getDisplayPrice(plan.name, plan.price);
+            const currentTag = getDisplayTag(plan);
+
+            return (
+              <article
+                class:list={[
+                  'relative flex w-[85%] max-w-[340px] shrink-0 snap-center flex-col rounded-2xl p-[1px] lg:w-auto lg:max-w-none lg:flex-1 lg:shrink',
+                  plan.featured
+                    ? 'bg-linear-to-b from-azure-64 via-azure-51/60 to-azure-28/40 shadow-[0_24px_70px_-20px_rgba(38,129,222,0.6)] lg:-translate-y-3'
+                    : 'bg-line/70',
+                ]}
+                data-plan={key}
+              >
+                {plan.featured && (
+                  <span class="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-azure-64 bg-linear-to-r from-azure-51 to-azure-64 px-4 py-1 font-mono text-[11px] font-bold tracking-[0.14em] whitespace-nowrap text-white shadow-[0_6px_20px_-4px_rgba(79,163,247,0.8)]">
+                    {plan.ribbon}
                   </span>
+                )}
+                <div class:list={['flex h-full flex-col rounded-[15px] p-6 lg:p-8', plan.featured ? 'bg-[#0d1524]' : 'bg-surface']}>
+                  <div class="flex items-center justify-between gap-3">
+                    <h3 class="font-geist text-lg leading-7 font-semibold text-strong lg:text-xl">{plan.name}</h3>
+                    <span
+                      class:list={[
+                        'plan-tag-badge rounded-full px-3 py-1 font-mono text-[11px] leading-4 font-bold tracking-wider whitespace-nowrap',
+                        plan.featured ? 'bg-azure-64/15 text-azure-64' : 'bg-white/[0.06] text-text/80',
+                      ]}
+                      data-tag-target={key}
+                    >
+                      {currentTag}
+                    </span>
+                  </div>
+
+                  <div class="mt-6 flex items-end gap-1.5">
+                    <span class="plan-price-num font-mono text-[40px] leading-none font-bold tracking-tight text-white lg:text-5xl" data-price-target={key}>
+                      {currentPrice}
+                    </span>
+                    <span class="pb-1 font-mono text-sm text-muted">{plan.unit}</span>
+                  </div>
+                  <p class="mt-3 font-geist text-sm leading-5 text-muted">{plan.note}</p>
+
+                  <a
+                    href={LINKS.playStore}
+                    target="_blank"
+                    rel="noopener"
+                    class:list={[
+                      'plan-cta-btn mt-6 flex h-12 items-center justify-center rounded-xl font-mono text-sm font-bold tracking-wider transition-all duration-200 hover:-translate-y-0.5',
+                      plan.featured
+                        ? 'bg-linear-to-r from-azure-51 to-azure-64 text-white shadow-[0_10px_28px_-8px_rgba(79,163,247,0.75)]'
+                        : 'border border-white/15 bg-white/[0.04] text-strong hover:border-azure-64',
+                    ]}
+                    data-plan-cta={key}
+                  >
+                    {PRICING.cta}
+                  </a>
+
+                  <div class="my-6 h-px w-full bg-white/[0.08]" />
+
+                  <ul class="flex flex-col gap-3">
+                    {[...PRICING.features, plan.devices].map((f) => (
+                      <li class="flex items-center gap-3 font-geist text-sm leading-5 text-text">
+                        <svg class="size-5 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                          <circle cx="10" cy="10" r="10" class={plan.featured ? 'fill-azure-64/20' : 'fill-white/[0.07]'} />
+                          <path d="m6 10.2 2.6 2.6L14 7.4" stroke="#4fa3f7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-
-                <div class="mt-6 flex items-end gap-1.5">
-                  <span class="font-mono text-[40px] leading-none font-bold tracking-tight text-white lg:text-5xl">{plan.price}</span>
-                  <span class="pb-1 font-mono text-sm text-muted">{plan.unit}</span>
-                </div>
-                <p class="mt-3 font-geist text-sm leading-5 text-muted">{plan.note}</p>
-
-                <a
-                  href={LINKS.playStore}
-                  target="_blank"
-                  rel="noopener"
-                  class:list={[
-                    'mt-6 flex h-12 items-center justify-center rounded-xl font-mono text-sm font-bold tracking-wider transition-all duration-200 hover:-translate-y-0.5',
-                    plan.featured
-                      ? 'bg-linear-to-r from-azure-51 to-azure-64 text-white shadow-[0_10px_28px_-8px_rgba(79,163,247,0.75)]'
-                      : 'border border-white/15 bg-white/[0.04] text-strong hover:border-azure-64',
-                  ]}
-                >
-                  {PRICING.cta}
-                </a>
-
-                <div class="my-6 h-px w-full bg-white/[0.08]" />
-
-                <ul class="flex flex-col gap-3">
-                  {[...PRICING.features, plan.devices].map((f) => (
-                    <li class="flex items-center gap-3 font-geist text-sm leading-5 text-text">
-                      <svg class="size-5 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <circle cx="10" cy="10" r="10" class={plan.featured ? 'fill-azure-64/20' : 'fill-white/[0.07]'} />
-                        <path d="m6 10.2 2.6 2.6L14 7.4" stroke="#4fa3f7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))
+              </article>
+            );
+          })
         }
       </div>
       <div class="flex items-center gap-2 lg:hidden" data-dots>
@@ -98,3 +133,36 @@ import SectionHeading from './SectionHeading.astro';
     </div>
   </div>
 </section>
+
+<script>
+  async function hydrateCampaignPricing() {
+    const sec = document.getElementById('pricing');
+    if (!sec) return;
+
+    const apiUrl = sec.getAttribute('data-api') || 'https://glidexa-cms-api.muhamadjajuni-code.workers.dev';
+
+    try {
+      const res = await fetch(`${apiUrl}/api/campaigns/active`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const camp = json.data;
+
+          const monthlyPriceEl = document.querySelector('[data-price-target="monthly"]');
+          const sixPriceEl = document.querySelector('[data-price-target="six_month"]');
+          const yearlyPriceEl = document.querySelector('[data-price-target="yearly"]');
+          const yearlyTagEl = document.querySelector('[data-tag-target="yearly"]');
+
+          if (monthlyPriceEl && camp.monthly_price) monthlyPriceEl.textContent = camp.monthly_price;
+          if (sixPriceEl && camp.six_month_price) sixPriceEl.textContent = camp.six_month_price;
+          if (yearlyPriceEl && camp.yearly_price) yearlyPriceEl.textContent = camp.yearly_price;
+          if (yearlyTagEl && camp.tag_discount) yearlyTagEl.textContent = camp.tag_discount;
+        }
+      }
+    } catch {
+      // Keep static pricing if fetch fails
+    }
+  }
+
+  hydrateCampaignPricing();
+</script>
