@@ -12,10 +12,10 @@ jobs:
     name: Build & Deploy
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Setup Node.js (LTS)
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 'lts/*'
       - name: Install dependencies
         run: npm ci || npm install
       - name: Build Web
