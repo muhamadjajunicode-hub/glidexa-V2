@@ -4,12 +4,30 @@ import { CMS_API_URL } from '../lib/api';
 ---
 
 <Base title="Halaman Tidak Ditemukan - GlideXAVPN" description="Halaman yang Anda tuju tidak ditemukan.">
-  <div id="fallback-loader" class="relative mx-auto flex min-h-[60vh] w-full max-w-[800px] flex-col items-center justify-center px-6 py-20 text-center" data-api={CMS_API_URL}>
-    <div id="loading-state" class="hidden">
+  <div id="fallback-loader" class="relative mx-auto flex min-h-[60vh] w-full max-w-[900px] flex-col items-center justify-center px-6 py-20 text-center" data-api={CMS_API_URL}>
+    <!-- Loading State -->
+    <div id="loading-state" class="hidden my-12">
       <div class="size-12 animate-spin rounded-full border-4 border-azure-51 border-t-transparent mx-auto mb-4"></div>
-      <p class="font-mono text-sm text-muted">Memuat artikel terbaru dari server...</p>
+      <p class="font-mono text-sm text-muted">Memeriksa artikel...</p>
     </div>
 
+    <!-- Dynamic Article View Container (if loaded via client) -->
+    <div id="dynamic-article" class="hidden w-full text-left">
+      <a href="/blog" class="inline-flex items-center gap-2 font-mono text-xs text-muted hover:text-ping mb-6 transition-colors">
+        &larr; Kembali ke Semua Artikel
+      </a>
+      <div class="mb-4 flex items-center gap-3">
+        <span id="dyn-category" class="rounded bg-azure-51/10 px-2.5 py-0.5 font-mono text-xs text-azure-51 border border-azure-51/20"></span>
+        <span id="dyn-date" class="font-mono text-xs text-muted"></span>
+      </div>
+      <h1 id="dyn-title" class="font-mono text-2xl sm:text-4xl font-semibold text-strong leading-tight"></h1>
+      <div id="dyn-thumbnail" class="mt-6 hidden">
+        <img id="dyn-img" src="" alt="" class="w-full max-h-[420px] rounded-xl object-cover border border-line" />
+      </div>
+      <div id="dyn-content" class="mt-8 font-geist text-text leading-relaxed text-sm sm:text-base space-y-4"></div>
+    </div>
+
+    <!-- Default 404 View -->
     <div id="default-404">
       <span class="rounded bg-surface-2 px-3 py-1 font-mono text-xs text-soft border border-line">ERROR 404</span>
       <h1 class="mt-4 font-mono text-3xl sm:text-5xl font-medium text-strong">HALAMAN TIDAK DITEMUKAN</h1>
@@ -34,11 +52,12 @@ import { CMS_API_URL } from '../lib/api';
   </div>
 
   <script>
-    // Smart Dynamic Fallback: If URL is /blog/[slug], check if it's a newly published article
-    async function checkNewArticle() {
+    import { marked } from 'marked';
+
+    async function checkDynamicArticle() {
       const path = window.location.pathname;
       const match = path.match(/^\/blog\/([^/]+)\/?$/);
-      if (!match) return;
+      if (!match) return; // Not a blog article path, keep standard 404 view
 
       const slug = match[1];
       const root = document.getElementById('fallback-loader');
@@ -46,6 +65,8 @@ import { CMS_API_URL } from '../lib/api';
 
       const loadingEl = document.getElementById('loading-state');
       const default404El = document.getElementById('default-404');
+      const dynamicArticleEl = document.getElementById('dynamic-article');
+
       if (loadingEl) loadingEl.classList.remove('hidden');
       if (default404El) default404El.classList.add('hidden');
 
@@ -54,20 +75,49 @@ import { CMS_API_URL } from '../lib/api';
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
-            // Found! Redirect or load
-            window.location.reload();
+            const art = json.data;
+            document.title = `${art.title} - GlideXAVPN`;
+
+            const titleEl = document.getElementById('dyn-title');
+            const catEl = document.getElementById('dyn-category');
+            const dateEl = document.getElementById('dyn-date');
+            const contentEl = document.getElementById('dyn-content');
+            const thumbWrap = document.getElementById('dyn-thumbnail');
+            const imgEl = document.getElementById('dyn-img') as HTMLImageElement;
+
+            if (titleEl) titleEl.textContent = art.title;
+            if (catEl) catEl.textContent = art.category || 'Edukasi';
+            if (dateEl) {
+              dateEl.textContent = new Date(art.published_at).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              });
+            }
+
+            if (art.thumbnail_url && imgEl && thumbWrap) {
+              imgEl.src = art.thumbnail_url;
+              imgEl.alt = art.title;
+              thumbWrap.classList.remove('hidden');
+            }
+
+            if (contentEl) {
+              contentEl.innerHTML = marked.parse(art.content || '') as string;
+            }
+
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (dynamicArticleEl) dynamicArticleEl.classList.remove('hidden');
             return;
           }
         }
       } catch (e) {
-        // Fallback to 404
+        // Fetch failed, show standard 404
       }
 
       if (loadingEl) loadingEl.classList.add('hidden');
       if (default404El) default404El.classList.remove('hidden');
     }
 
-    checkNewArticle();
+    checkDynamicArticle();
   </script>
 </Base>
-
