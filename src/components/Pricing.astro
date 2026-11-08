@@ -16,6 +16,7 @@ function getDisplayPrice(planName: string, defaultPrice: string) {
 
 function getDisplayNote(planName: string, defaultNote: string) {
   if (!campaign) return defaultNote;
+  if (planName === 'Monthly') return 'Billed monthly, cancel anytime';
   if (planName === '6 Months' && campaign.six_month_price) {
     const num = parseFloat(campaign.six_month_price.replace(/[^\d.]/g, ''));
     if (!isNaN(num) && num > 0) return `Rp ${Math.round(num * 6)}k billed every 6 months`;
@@ -166,10 +167,12 @@ function getPlanKey(name: string) {
           const sixPriceEl = document.querySelector('[data-price-target="six_month"]');
           const yearlyPriceEl = document.querySelector('[data-price-target="yearly"]');
           const yearlyTagEl = document.querySelector('[data-tag-target="yearly"]');
+          const monthlyNoteEl = document.querySelector('[data-note-target="monthly"]');
           const sixNoteEl = document.querySelector('[data-note-target="six_month"]');
           const yearlyNoteEl = document.querySelector('[data-note-target="yearly"]');
 
           if (monthlyPriceEl && camp.monthly_price) monthlyPriceEl.textContent = camp.monthly_price;
+          if (monthlyNoteEl) monthlyNoteEl.textContent = 'Billed monthly, cancel anytime';
           if (sixPriceEl && camp.six_month_price) sixPriceEl.textContent = camp.six_month_price;
           if (yearlyPriceEl && camp.yearly_price) yearlyPriceEl.textContent = camp.yearly_price;
           if (yearlyTagEl && camp.tag_discount) yearlyTagEl.textContent = camp.tag_discount;
