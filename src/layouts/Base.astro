@@ -59,6 +59,50 @@ const canonicalUrl = canonical || new URL(Astro.url.pathname, 'https://glidexavp
     <Footer />
     <script>
       import '../scripts/carousel.ts';
+
+      // Lightweight, Privacy-First Analytics Tracker
+      try {
+        const devType = window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop';
+        const apiUrl = 'https://glidexa-cms-api.muhamadjajuni-code.workers.dev/api/analytics/track';
+
+        // 1. Pageview
+        const pvData = JSON.stringify({
+          event_type: 'pageview',
+          path: window.location.pathname,
+          device_type: devType,
+          referrer: document.referrer || 'direct'
+        });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(apiUrl, pvData);
+        } else {
+          fetch(apiUrl, { method: 'POST', body: pvData, keepalive: true, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        // 2. Click Tracker
+        document.addEventListener('click', (e) => {
+          const target = (e.target as HTMLElement)?.closest('a');
+          if (!target) return;
+          const href = target.getAttribute('href') || '';
+          let eventName = null;
+          if (href.includes('play.google')) eventName = 'click_playstore';
+          else if (href.includes('wa.me')) eventName = 'click_whatsapp';
+          else if (href.includes('#pricing')) eventName = 'click_pricing';
+
+          if (eventName) {
+            const clkData = JSON.stringify({
+              event_type: 'click',
+              path: window.location.pathname,
+              event_name: eventName,
+              device_type: devType
+            });
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(apiUrl, clkData);
+            } else {
+              fetch(apiUrl, { method: 'POST', body: clkData, keepalive: true, headers: { 'Content-Type': 'application/json' } });
+            }
+          }
+        });
+      } catch {}
     </script>
   </body>
 </html>
