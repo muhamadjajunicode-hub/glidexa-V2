@@ -1,5 +1,5 @@
 export const CMS_API_URL =
-  import.meta.env.PUBLIC_CMS_API_URL || 'http://127.0.0.1:8787';
+  import.meta.env.PUBLIC_CMS_API_URL || 'https://glidexa-cms-api.muhamadjajuni-code.workers.dev';
 
 export interface Article {
   id: number;
