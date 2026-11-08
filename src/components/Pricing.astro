@@ -14,6 +14,19 @@ function getDisplayPrice(planName: string, defaultPrice: string) {
   return defaultPrice;
 }
 
+function getDisplayNote(planName: string, defaultNote: string) {
+  if (!campaign) return defaultNote;
+  if (planName === '6 Months' && campaign.six_month_price) {
+    const num = parseFloat(campaign.six_month_price.replace(/[^\d.]/g, ''));
+    if (!isNaN(num) && num > 0) return `Rp ${Math.round(num * 6)}k billed every 6 months`;
+  }
+  if (planName === 'Yearly' && campaign.yearly_price) {
+    const num = parseFloat(campaign.yearly_price.replace(/[^\d.]/g, ''));
+    if (!isNaN(num) && num > 0) return `Rp ${Math.round(num * 12)}k billed once a year`;
+  }
+  return defaultNote;
+}
+
 function getDisplayTag(plan: any) {
   if (campaign && plan.name === 'Yearly' && campaign.tag_discount) {
     return campaign.tag_discount;
@@ -54,6 +67,7 @@ function getPlanKey(name: string) {
           PRICING.plans.map((plan) => {
             const key = getPlanKey(plan.name);
             const currentPrice = getDisplayPrice(plan.name, plan.price);
+            const currentNote = getDisplayNote(plan.name, plan.note);
             const currentTag = getDisplayTag(plan);
 
             return (
@@ -91,7 +105,7 @@ function getPlanKey(name: string) {
                     </span>
                     <span class="pb-1 font-mono text-sm text-muted">{plan.unit}</span>
                   </div>
-                  <p class="mt-3 font-geist text-sm leading-5 text-muted">{plan.note}</p>
+                  <p class="mt-3 font-geist text-sm leading-5 text-muted" data-note-target={key}>{currentNote}</p>
 
                   <a
                     href={LINKS.playStore}
@@ -152,11 +166,26 @@ function getPlanKey(name: string) {
           const sixPriceEl = document.querySelector('[data-price-target="six_month"]');
           const yearlyPriceEl = document.querySelector('[data-price-target="yearly"]');
           const yearlyTagEl = document.querySelector('[data-tag-target="yearly"]');
+          const sixNoteEl = document.querySelector('[data-note-target="six_month"]');
+          const yearlyNoteEl = document.querySelector('[data-note-target="yearly"]');
 
           if (monthlyPriceEl && camp.monthly_price) monthlyPriceEl.textContent = camp.monthly_price;
           if (sixPriceEl && camp.six_month_price) sixPriceEl.textContent = camp.six_month_price;
           if (yearlyPriceEl && camp.yearly_price) yearlyPriceEl.textContent = camp.yearly_price;
           if (yearlyTagEl && camp.tag_discount) yearlyTagEl.textContent = camp.tag_discount;
+
+          if (sixNoteEl && camp.six_month_price) {
+            const num = parseFloat(camp.six_month_price.replace(/[^\d.]/g, ''));
+            if (!isNaN(num) && num > 0) {
+              sixNoteEl.textContent = `Rp ${Math.round(num * 6)}k billed every 6 months`;
+            }
+          }
+          if (yearlyNoteEl && camp.yearly_price) {
+            const num = parseFloat(camp.yearly_price.replace(/[^\d.]/g, ''));
+            if (!isNaN(num) && num > 0) {
+              yearlyNoteEl.textContent = `Rp ${Math.round(num * 12)}k billed once a year`;
+            }
+          }
         }
       }
     } catch {
